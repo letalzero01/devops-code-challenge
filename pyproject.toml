@@ -10,3 +10,8 @@ dependencies = [
     "ruff",
     "httpx2",
 ]
+
+[tool.uv.workspace]
+members = [
+    "my-fastapi-app",
+]

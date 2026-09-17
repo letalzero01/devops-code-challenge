@@ -16,4 +16,4 @@ RUN uv sync --frozen --no-dev
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["python", "-m", "app"]
+RUN uv run fastapi dev
