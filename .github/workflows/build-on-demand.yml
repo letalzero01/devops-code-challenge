@@ -1,0 +1,89 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        type: choice
+        required: true
+        default: "DEV"
+        options:
+          - DEV
+          - STG
+          - PRD
+      region:
+        description: "Target region"
+        type: string
+        required: true
+        default: "us-east-1"
+        options:
+          - us-east-1
+          - us-west-2
+          - eu-west-1
+      appversion:
+        description: "Application version"
+        type: string
+        required: true
+    
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.1.0
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Lint with ruff
+        run: uv run ruff check
+
+      - name: Run tests
+        run: uv run pytest
+
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set image tag
+        id: vars
+        run: echo "tag=v-${{ github.run_number }}-${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      #- name: Build Docker image
+      #  run: docker build -t myapp:${{ steps.vars.outputs.tag }} .
+
+  summary:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Display summary
+        run: |
+          echo "Build Summary:"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Region: ${{ github.event.inputs.region }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Application Version: ${{ github.event.inputs.appversion }}"
+          echo "Docker Image Tag: myapp:${{ steps.vars.outputs.tag }}"
+          echo "Github user: ${{ github.actor }}"
+          echo "UTC time of build: $(date -u)"
+          echo "Houston time: $(date -d '5 hours ago')"
