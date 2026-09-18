@@ -14,17 +14,17 @@ on:
           - PRD
       region:
         description: "Target region"
-        type: string
+        type: choice
         required: true
         default: "us-east-1"
         options:
           - us-east-1
           - us-west-2
           - eu-west-1
+          - ap-southeast-1
       appversion:
         description: "Application version"
         type: string
-        required: true
     
 
 jobs:
